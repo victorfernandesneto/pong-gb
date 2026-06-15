@@ -1,0 +1,45 @@
+
+# Build artifacts
+build/
+dist/
+*.o
+*.obj
+*.elf
+*.map
+*.sym
+*.ihx
+*.hex
+
+# ROMs, saves and emulator state
+*.gb
+*.gbc
+*.sav
+*.sgm
+*.state
+
+# Assembly/intermediate files
+*.lst
+*.bin
+*.rom
+
+# IDE and editor files
+.vscode/
+.idea/
+*.suo
+*.user
+*.userprefs
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*~
+*.tmp
+
+# Dependency directories
+node_modules/
+
+# Package files
+.env
