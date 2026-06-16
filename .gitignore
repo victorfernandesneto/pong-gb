@@ -43,3 +43,4 @@ node_modules/
 
 # Package files
 .env
+*.png
