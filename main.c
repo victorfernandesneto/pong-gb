@@ -5,13 +5,9 @@
 #include "MyBg.h"
 #include "BolaSprite.h"
 #include "RaqueteSprite.h"
-uint8_t joypadPrevious=0, joypadCurrent=0;
-int spriteBallX,spriteBallY;
-int playerX,playerY;
-int cpuX, cpuY;
-int8_t velocityBallX,velocityBallY;
-int8_t velocityplayerX=0,velocityplayerY=0;
-int8_t velocitycpuX=0,velocitycpuY=0;
+int spriteBallX,spriteBallY,playerX,playerY,cpuX,cpuY;
+int8_t velocityBallX,velocityBallY,velocitycpuX=0,velocitycpuY=0,velocityplayerX=0,velocityplayerY=0,cpuTargetOffset=0;
+uint8_t joypadPrevious=0,joypadCurrent=0,cpuReactionTimer=0, playerPoints = 0, cpuPoints = 0;
 
 
 void main(void)
@@ -31,8 +27,8 @@ void main(void)
 
     set_sprite_data(0,1,BolaSprite);
     set_sprite_tile(0,0);
-    spriteBallX=80;
-    spriteBallY=72;
+    spriteBallX=88;
+    spriteBallY=92;
 
     /* 
     Setando a velocidade do sprite randomizada no início da partida
@@ -43,10 +39,13 @@ void main(void)
 
     set_sprite_data(1,2,RaqueteSprite_tiles);
     playerX = 8;
-    playerY = 86;
+    playerY = 96;
     cpuX = 164;
-    cpuY = 86;
-
+    cpuY = 96;
+    move_sprite(0,spriteBallX,spriteBallY);
+    move_metasprite_ex(RaqueteSprite_metasprites[0], 1, 0, 1, playerX, playerY);
+    move_metasprite_ex(RaqueteSprite_metasprites[0], 1, 0, 5, cpuX, cpuY);
+    delay(1000);
 
     // Loop forever
     while(1) {
@@ -63,8 +62,8 @@ void main(void)
             velocityplayerY=0;
         }
         playerY+=velocityplayerY;
-        if(playerY < 32) {
-            playerY = 32;
+        if(playerY < 48) {
+            playerY = 48;
         }
         if(playerY > 144) {
             playerY = 144;
@@ -72,17 +71,22 @@ void main(void)
 
         // Lógica da movimentação da CPU
         if (velocityBallX > 0) {
-            if (cpuY < spriteBallY - 3) {
+            if (cpuReactionTimer > 0) {
+                cpuReactionTimer--;
+            }
+            else{
+            if (cpuY < spriteBallY + cpuTargetOffset - 3) {
                 cpuY += 1;
             } 
-            else if (cpuY > spriteBallY + 3) {
+            else if (cpuY > spriteBallY + cpuTargetOffset + 3) {
                 cpuY -= 1;
         }
-            if(cpuY < 32) {
-                cpuY = 32;
+            if(cpuY < 48) {
+                cpuY = 48;
             }
             if(cpuY > 144) {
                 cpuY = 144;
+            }
     }}
 
         // Lógica da movimentação da bola
@@ -90,8 +94,8 @@ void main(void)
         spriteBallY += velocityBallY;
 
         // Lógica da colisão da bola com as paredes superior e inferior
-        if(spriteBallY < 16) {
-            spriteBallY = 16;
+        if(spriteBallY < 32) {
+            spriteBallY = 32;
             velocityBallY = -velocityBallY; // Inverte a direção vertical
         }
         if(spriteBallY > 152) {
@@ -103,13 +107,15 @@ void main(void)
         if (spriteBallX < 0 || spriteBallX > 168) {
             if (spriteBallX < 0) {
                 // Lógica do gol pro time da direita
+                cpuPoints++;
             } else {
                 // Lógica do gol pro time da esquerda
+                playerPoints++;
             }
-            spriteBallX = 84;
-            spriteBallY = 84;
-            playerY = 86;
-            cpuY = 86;
+            spriteBallX = 88;
+            spriteBallY = 92;
+            playerY = 96;
+            cpuY = 96;
             delay(1000); // Pausa pra mostrar o gol
             move_metasprite_ex(RaqueteSprite_metasprites[0], 1, 0, 1, playerX, playerY);
             move_metasprite_ex(RaqueteSprite_metasprites[0], 1, 0, 5, cpuX, cpuY);
@@ -120,14 +126,16 @@ void main(void)
 
         // Lógica da colisão da bola com a raquete do player
         if (velocityBallX < 0 && spriteBallX <= playerX + 2 && spriteBallX >= playerX - 2) { 
-            if (spriteBallY >= (playerY - 20) && spriteBallY <= (playerY + 20)) {
+            if (spriteBallY >= (playerY - 16) && spriteBallY <= (playerY + 16)) {
                 velocityBallX = -velocityBallX;
                 spriteBallX = playerX + 2;
+                cpuReactionTimer = 20 + (spriteBallY % 100);
+                cpuTargetOffset = (spriteBallY % 41) - 20;
                 }}
 
         // Lógica da colisão da bola com a raquete da CPU
         if (velocityBallX > 0 && spriteBallX <= cpuX && spriteBallX >= cpuX - 4) { 
-            if (spriteBallY >= (cpuY - 20) && spriteBallY <= (cpuY + 20)) {
+            if (spriteBallY >= (cpuY - 16) && spriteBallY <= (cpuY + 16)) {
                 velocityBallX = -velocityBallX;
                 spriteBallX = cpuX - 4;
                 }}
