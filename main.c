@@ -15,7 +15,7 @@ int spriteBallX,spriteBallY,playerX,playerY,cpuX,cpuY,diffBallPlayer,diffBallCPU
 int8_t velocityBallX,velocityBallY,velocitycpuX=0,velocitycpuY=0,velocityplayerX=0,velocityplayerY=0,cpuTargetOffset=0;
 uint8_t joypadPrevious=0,joypadCurrent=0,cpuReactionTimer=0,playerPoints=0,cpuPoints=0;
 
-void atualizar_hud(void) {
+void refresh_hud(void) {
     gotoxy(0, 17);
     printf(" P1: %d      CPU: %d ", playerPoints, cpuPoints);
 }
@@ -39,9 +39,7 @@ void reset_positions(void){
     delay(1000);
 }
 
-void main(void)
-{
-
+void initialization(void){
     OBP0_REG = 0xFC;
     BGP_REG  = 0xFC;
     DISPLAY_ON;
@@ -55,22 +53,18 @@ void main(void)
     gotoxy(8, 6); 
     printf("PONG");
 
-    // "PRESS START" tem 11 letras. (20 - 11) / 2 = 4.5 (arredondamos para 4 ou 5)
     gotoxy(4, 11); 
-    printf("PRESS START");
+    printf("PRESS  START");
 
     while (!(joypad() & J_START)) {
-    vsync(); // Esse é o seu "wait". Ele espera o frame da TV renderizar e evita travar o Game Boy
+        vsync();
     }
 
-    // --- 4. O JOGADOR APERTOU START! ---
-    // Espera ele soltar o botão de novo para o jogo não começar com o botão já pressionado
     while (joypad() & J_START) { 
         vsync(); 
     }
 
     fill_bkg_rect(0, 0, 20, 18, 0);
-
     SPRITES_8x8;
     SHOW_SPRITES;
 
@@ -78,8 +72,13 @@ void main(void)
     set_sprite_tile(0,0);
 
     set_sprite_data(1,2,RaqueteSprite_tiles);
+}
 
-    atualizar_hud();
+void main(void)
+{
+
+    initialization();
+    refresh_hud();
     reset_positions();
 
     // Loop forever
@@ -143,11 +142,11 @@ void main(void)
             if (spriteBallX < 0) {
                 // Lógica do gol pro time da direita
                 cpuPoints++;
-                atualizar_hud();
+                refresh_hud();
             } else {
                 // Lógica do gol pro time da esquerda
                 playerPoints++;
-                atualizar_hud();
+                refresh_hud();
             }
             delay(1000);
             reset_positions();
