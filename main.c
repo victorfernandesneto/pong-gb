@@ -52,6 +52,25 @@ void main(void)
     delay(3000);
     HIDE_BKG;
 
+    gotoxy(8, 6); 
+    printf("PONG");
+
+    // "PRESS START" tem 11 letras. (20 - 11) / 2 = 4.5 (arredondamos para 4 ou 5)
+    gotoxy(4, 11); 
+    printf("PRESS START");
+
+    while (!(joypad() & J_START)) {
+    vsync(); // Esse é o seu "wait". Ele espera o frame da TV renderizar e evita travar o Game Boy
+    }
+
+    // --- 4. O JOGADOR APERTOU START! ---
+    // Espera ele soltar o botão de novo para o jogo não começar com o botão já pressionado
+    while (joypad() & J_START) { 
+        vsync(); 
+    }
+
+    fill_bkg_rect(0, 0, 20, 18, 0);
+
     SPRITES_8x8;
     SHOW_SPRITES;
 
