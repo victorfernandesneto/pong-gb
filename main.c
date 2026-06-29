@@ -1,17 +1,47 @@
 #include <gb/gb.h>
-#include <stdlib.h>
+
 #include <gbdk/platform.h>
 #include <gbdk/metasprites.h>
+#include <gbdk/console.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
+
 #include "MyBg.h"
 #include "BolaSprite.h"
 #include "RaqueteSprite.h"
-int spriteBallX,spriteBallY,playerX,playerY,cpuX,cpuY;
-int8_t velocityBallX,velocityBallY,velocitycpuX=0,velocitycpuY=0,velocityplayerX=0,velocityplayerY=0,cpuTargetOffset=0;
-uint8_t joypadPrevious=0,joypadCurrent=0,cpuReactionTimer=0, playerPoints = 0, cpuPoints = 0;
 
+int spriteBallX,spriteBallY,playerX,playerY,cpuX,cpuY,diffBallPlayer,diffBallCPU;
+int8_t velocityBallX,velocityBallY,velocitycpuX=0,velocitycpuY=0,velocityplayerX=0,velocityplayerY=0,cpuTargetOffset=0;
+uint8_t joypadPrevious=0,joypadCurrent=0,cpuReactionTimer=0,playerPoints=0,cpuPoints=0;
+
+void atualizar_hud(void) {
+    gotoxy(0, 17);
+    printf(" P1: %d      CPU: %d ", playerPoints, cpuPoints);
+}
+
+void move_all_sprites(void) {
+    move_sprite(0,spriteBallX,spriteBallY-16);
+    move_metasprite_ex(RaqueteSprite_metasprites[0], 1, 0, 1, playerX, playerY-16);
+    move_metasprite_ex(RaqueteSprite_metasprites[0], 1, 0, 5, cpuX, cpuY-16);
+}
+
+void reset_positions(void){
+    spriteBallX=88;
+    spriteBallY=92;
+    playerX = 8;
+    playerY = 96;
+    cpuX = 164;
+    cpuY = 96;
+    move_all_sprites();
+    velocityBallX = -1;
+    velocityBallY = 1;
+    delay(1000);
+}
 
 void main(void)
 {
+
     OBP0_REG = 0xFC;
     BGP_REG  = 0xFC;
     DISPLAY_ON;
@@ -27,25 +57,11 @@ void main(void)
 
     set_sprite_data(0,1,BolaSprite);
     set_sprite_tile(0,0);
-    spriteBallX=88;
-    spriteBallY=92;
-
-    /* 
-    Setando a velocidade do sprite randomizada no início da partida
-    Ainda vou precisar randomizar após cada reinício de partida 
-    */
-    velocityBallX = -1;
-    velocityBallY = 1;
 
     set_sprite_data(1,2,RaqueteSprite_tiles);
-    playerX = 8;
-    playerY = 96;
-    cpuX = 164;
-    cpuY = 96;
-    move_sprite(0,spriteBallX,spriteBallY);
-    move_metasprite_ex(RaqueteSprite_metasprites[0], 1, 0, 1, playerX, playerY);
-    move_metasprite_ex(RaqueteSprite_metasprites[0], 1, 0, 5, cpuX, cpuY);
-    delay(1000);
+
+    atualizar_hud();
+    reset_positions();
 
     // Loop forever
     while(1) {
@@ -55,9 +71,9 @@ void main(void)
         
         // Lógica da movimentação do player
         if(joypadCurrent & J_UP) {
-            velocityplayerY=-1;
+            velocityplayerY=-2;
         } else if(joypadCurrent & J_DOWN) {
-            velocityplayerY=1;
+            velocityplayerY=2;
         } else {
             velocityplayerY=0;
         }
@@ -76,10 +92,10 @@ void main(void)
             }
             else{
             if (cpuY < spriteBallY + cpuTargetOffset - 3) {
-                cpuY += 1;
+                cpuY += 2;
             } 
             else if (cpuY > spriteBallY + cpuTargetOffset + 3) {
-                cpuY -= 1;
+                cpuY -= 2;
         }
             if(cpuY < 48) {
                 cpuY = 48;
@@ -108,41 +124,58 @@ void main(void)
             if (spriteBallX < 0) {
                 // Lógica do gol pro time da direita
                 cpuPoints++;
+                atualizar_hud();
             } else {
                 // Lógica do gol pro time da esquerda
                 playerPoints++;
+                atualizar_hud();
             }
-            spriteBallX = 88;
-            spriteBallY = 92;
-            playerY = 96;
-            cpuY = 96;
-            delay(1000); // Pausa pra mostrar o gol
-            move_metasprite_ex(RaqueteSprite_metasprites[0], 1, 0, 1, playerX, playerY);
-            move_metasprite_ex(RaqueteSprite_metasprites[0], 1, 0, 5, cpuX, cpuY);
-            move_sprite(0,spriteBallX,spriteBallY); // Reposiciona o sprite antes de esperar para evitar que ele fique invisível
-            velocityBallX = -1;
-            delay(1000); // Pausa pra se preparar
+            delay(1000);
+            reset_positions();
         }
+
 
         // Lógica da colisão da bola com a raquete do player
         if (velocityBallX < 0 && spriteBallX <= playerX + 2 && spriteBallX >= playerX - 2) { 
-            if (spriteBallY >= (playerY - 16) && spriteBallY <= (playerY + 16)) {
+            if (spriteBallY + 8 >= (playerY - 16) && spriteBallY <= (playerY + 16)) {
                 velocityBallX = -velocityBallX;
+                velocityBallX++;
                 spriteBallX = playerX + 2;
-                cpuReactionTimer = 20 + (spriteBallY % 100);
-                cpuTargetOffset = (spriteBallY % 41) - 20;
-                }}
+                cpuReactionTimer = 10 + (spriteBallY % 11);
+                cpuTargetOffset = (spriteBallY % 21) - 10;
+                diffBallPlayer=spriteBallY-playerY+4;
+                if (diffBallPlayer < -6){
+                    velocityBallY = -2;
+                }
+                else if (diffBallPlayer > 6){
+                    velocityBallY = 2;
+                }
+                else{
+                    velocityBallY = (velocityBallY > 0) ? 1:-1;
+                }
+            }
+        }
 
         // Lógica da colisão da bola com a raquete da CPU
         if (velocityBallX > 0 && spriteBallX <= cpuX && spriteBallX >= cpuX - 4) { 
-            if (spriteBallY >= (cpuY - 16) && spriteBallY <= (cpuY + 16)) {
+            if (spriteBallY + 8 >= (cpuY - 16) && spriteBallY <= (cpuY + 16)) {
                 velocityBallX = -velocityBallX;
+                velocityBallX--;
                 spriteBallX = cpuX - 4;
-                }}
+                diffBallCPU=spriteBallY-cpuY+4;
+                if (diffBallCPU < -6){
+                    velocityBallY = -2;
+                }
+                else if (diffBallCPU > 6){
+                    velocityBallY = 2;
+                }
+                else{
+                    velocityBallY = (velocityBallY > 0) ? 1:-1;
+                }
+            }
+        }
 
-        move_sprite(0,spriteBallX,spriteBallY);
-        move_metasprite_ex(RaqueteSprite_metasprites[0], 1, 0, 1, playerX, playerY);
-        move_metasprite_ex(RaqueteSprite_metasprites[0], 1, 0, 5, cpuX, cpuY);
+        move_all_sprites();
 		// Done processing, yield CPU and wait for start of next frame
         wait_vbl_done();
     }
