@@ -6,6 +6,6 @@ This is the sourcecode of a reiteration (?) of the Atari's classic Pong for the 
 
 ## How to play
 
-If you for some reason want to play the game, you can download the .zip, extract and run the cmd from the files that you extracted. In the cmd, just run ```make.bat``` and you will get the playable .gb file. With that, you can play using any GB emulator that you want. During this development, I playtested it using bgb, since it's the recommended to track VRAM, etc.
+If you want to play the game, you can download the .gb file from the releases and run in any emulator. Alternatively, you can check the [itch.io](https://pofesso.itch.io/pong) and download from there.
 
 ### Enjoy?
