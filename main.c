@@ -13,7 +13,7 @@
 
 int spriteBallX,spriteBallY,playerX,playerY,cpuX,cpuY,diffBallPlayer,diffBallCPU;
 int8_t velocityBallX,velocityBallY,velocitycpuX=0,velocitycpuY=0,velocityplayerX=0,velocityplayerY=0,cpuTargetOffset=0;
-uint8_t joypadPrevious=0,joypadCurrent=0,cpuReactionTimer=0,playerPoints=0,cpuPoints=0;
+uint8_t joypadPrevious=0,joypadCurrent=0,cpuReactionTimer=0,playerPoints,cpuPoints;
 
 void refresh_hud(void) {
     gotoxy(0, 17);
@@ -50,9 +50,18 @@ void initialization(void){
     delay(3000);
     HIDE_BKG;
 
+    SPRITES_8x8;
+    set_sprite_data(0,1,BolaSprite);
+    set_sprite_tile(0,0);
+    set_sprite_data(1,2,RaqueteSprite_tiles);
+
     gotoxy(8, 6); 
     printf("PONG");
 
+    initialize_game();
+}
+
+void initialize_game(void){
     gotoxy(4, 11); 
     printf("PRESS  START");
 
@@ -65,13 +74,29 @@ void initialization(void){
     }
 
     fill_bkg_rect(0, 0, 20, 18, 0);
-    SPRITES_8x8;
+    cpuPoints=0;
+    playerPoints=0;
+    reset_positions();
     SHOW_SPRITES;
+    refresh_hud();
+}
 
-    set_sprite_data(0,1,BolaSprite);
-    set_sprite_tile(0,0);
-
-    set_sprite_data(1,2,RaqueteSprite_tiles);
+void end_screen(cpuPoints, playerPoints){
+    HIDE_SPRITES;
+    fill_bkg_rect(0, 0, 20, 18, 0);
+    velocityBallX=0;
+    if(cpuPoints==10){
+        gotoxy(6, 6); 
+        printf("YOU LOSE");
+    }
+    else{
+        gotoxy(6, 6); 
+        printf("YOU WIN");
+    }
+    cpuPoints=0;
+    playerPoints=0;
+    delay(1000);
+    initialize_game();
 }
 
 void main(void)
@@ -142,10 +167,16 @@ void main(void)
             if (spriteBallX < 0) {
                 // Lógica do gol pro time da direita
                 cpuPoints++;
+                if(cpuPoints==10){
+                    end_screen(cpuPoints, playerPoints);
+                }
                 refresh_hud();
             } else {
                 // Lógica do gol pro time da esquerda
                 playerPoints++;
+                if(playerPoints==10){
+                    end_screen(cpuPoints, playerPoints);
+                }
                 refresh_hud();
             }
             delay(1000);
